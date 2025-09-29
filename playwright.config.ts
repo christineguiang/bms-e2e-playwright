@@ -1,47 +1,28 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+// Allow CI to set the target server:
+//  - BASE_URL: full URL (e.g. https://staging.example.com)
+//  - HEADLESS: "true" | "false" (optional, defaults true in CI)
+//  - RETRIES: number (optional)
+const BASE_URL = process.env.BASE_URL || 'https://bms-centos-3.leafnode.io';
+const HEADLESS = process.env.HEADLESS ? process.env.HEADLESS === 'true' : true;
+const RETRIES = process.env.RETRIES ? Number(process.env.RETRIES) : 1;
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
-  testDir: './tests',
+   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
-  expect: { timeout: 50000 },
+  retries: RETRIES,
+  reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    actionTimeout: 100000,
-    navigationTimeout: 30000,
-    trace: 'on-first-retry',
-    baseURL: 'https://bms-centos-1.leafnode.io',
-    screenshot: 'only-on-failure'
+    baseURL: BASE_URL,
+    headless: HEADLESS,
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure'
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    }
+   projects: [
+     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+     { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
 
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
-  ],
 
 });
